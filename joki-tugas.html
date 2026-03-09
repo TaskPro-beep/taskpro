@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskPro — Joki Tugas #1</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --card: #1a1a26;
+      --border: rgba(255,255,255,0.07);
+      --accent: #7c5cfc;
+      --accent2: #fc5c7d;
+      --accent3: #5cdbfc;
+      --text: #f0eeff;
+      --muted: #888;
+      --gold: #f5c518;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom cursor */
+    .cursor {
+      width: 12px; height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.15s, background 0.2s;
+      mix-blend-mode: screen;
+    }
+    .cursor-ring {
+      width: 36px; height: 36px;
+      border: 1.5px solid var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      transition: left 0.12s ease, top 0.12s ease, transform 0.2s, border-color 0.2s;
+      opacity: 0.5;
+    }
+
+    /* NOISE TEXTURE OVERLAY */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.4;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      padding: 18px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 100;
+      background: rgba(10,10,15,0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.4rem;
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--accent); }
+    nav ul { list-style: none; display: flex; gap: 32px; }
+    nav ul a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+    nav ul a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--accent);
+      color: white; border: none;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500; font-size: 0.9rem;
+      cursor: none; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.35); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Gradient orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.25;
+      animation: float 8s ease-in-out infinite;
+    }
+    .orb1 { width: 500px; height: 500px; background: var(--accent); top: -100px; left: -100px; animation-delay: 0s; }
+    .orb2 { width: 400px; height: 400px; background: var(--accent2); bottom: -80px; right: -60px; animation-delay: -3s; }
+    .orb3 { width: 300px; height: 300px; background: var(--accent3); top: 40%; left: 60%; animation-delay: -5s; }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      50% { transform: translate(20px, -30px) scale(1.05); }
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(124,92,252,0.15);
+      border: 1px solid rgba(124,92,252,0.3);
+      padding: 6px 16px; border-radius: 100px;
+      font-size: 0.8rem; color: #b49fff;
+      margin-bottom: 28px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .badge .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 1.5s infinite; }
+
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      max-width: 900px;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+    .hero h1 .highlight {
+      position: relative;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero h1 .strike {
+      text-decoration: line-through;
+      opacity: 0.35;
+      font-style: italic;
+    }
+
+    .hero p {
+      margin-top: 20px;
+      font-size: 1.15rem; color: var(--muted);
+      max-width: 520px; line-height: 1.7;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+
+    .hero-actions {
+      margin-top: 40px;
+      display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+      animation: fadeUp 0.7s 0.3s ease both;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #a07cff);
+      color: white; border: none;
+      padding: 15px 34px;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600; font-size: 1rem;
+      cursor: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 32px rgba(124,92,252,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(124,92,252,0.45); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 15px 34px;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500; font-size: 1rem;
+      cursor: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); background: rgba(124,92,252,0.06); }
+
+    /* STATS BAR */
+    .stats-bar {
+      display: flex; justify-content: center; gap: 60px; flex-wrap: wrap;
+      padding: 40px 48px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: relative; z-index: 1;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.2rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent3));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+
+    /* SERVICES */
+    section { padding: 100px 48px; position: relative; z-index: 1; }
+    .section-label {
+      display: inline-block;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 14px;
+    }
+    h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800; letter-spacing: -1px;
+      max-width: 600px; line-height: 1.1;
+    }
+    .section-header { margin-bottom: 56px; }
+    .section-header p { margin-top: 14px; color: var(--muted); max-width: 440px; line-height: 1.7; }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .service-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+      position: relative; overflow: hidden;
+    }
+    .service-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .service-card:hover { transform: translateY(-6px); border-color: rgba(124,92,252,0.25); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .service-card:hover::before { opacity: 1; }
+
+    .service-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+    .service-card h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.15rem; margin-bottom: 10px; }
+    .service-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.65; }
+    .service-price {
+      margin-top: 20px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 1.1rem;
+      color: var(--accent);
+    }
+    .service-price span { font-size: 0.8rem; font-weight: 400; color: var(--muted); font-family: 'DM Sans', sans-serif; }
+
+    /* PROCESS */
+    .process-section { background: var(--surface); }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0; position: relative;
+    }
+    .steps::before {
+      content: '';
+      position: absolute; top: 28px; left: 10%; right: 10%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), var(--border), transparent);
+    }
+    .step { text-align: center; padding: 20px 24px; }
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.1rem; color: var(--accent);
+      position: relative; z-index: 1;
+      box-shadow: 0 0 20px rgba(124,92,252,0.2);
+    }
+    .step h4 { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 10px; }
+    .step p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    /* TESTIMONIALS */
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .testi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      transition: transform 0.25s;
+    }
+    .testi-card:hover { transform: translateY(-4px); }
+    .stars { color: var(--gold); font-size: 0.85rem; margin-bottom: 14px; letter-spacing: 2px; }
+    .testi-card blockquote {
+      font-size: 0.95rem; line-height: 1.7;
+      color: rgba(240,238,255,0.85);
+      font-style: italic;
+    }
+    .testi-author {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 20px;
+    }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.9rem; color: white;
+    }
+    .testi-author div { font-size: 0.85rem; color: var(--muted); }
+    .testi-author strong { color: var(--text); font-size: 0.9rem; }
+
+    /* PRICING */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .pricing-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 36px 32px;
+      position: relative;
+      transition: transform 0.25s;
+    }
+    .pricing-card:hover { transform: translateY(-6px); }
+    .pricing-card.featured {
+      background: linear-gradient(145deg, #1d1535, #1a1a26);
+      border-color: var(--accent);
+      box-shadow: 0 0 60px rgba(124,92,252,0.15);
+    }
+    .featured-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; font-size: 0.72rem; font-weight: 700;
+      padding: 4px 14px; border-radius: 100px; letter-spacing: 1px;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .pricing-tier { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--muted); margin-bottom: 12px; }
+    .pricing-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.6rem; font-weight: 800;
+      line-height: 1;
+    }
+    .pricing-price sup { font-size: 1.1rem; vertical-align: top; margin-top: 8px; color: var(--muted); }
+    .pricing-note { font-size: 0.8rem; color: var(--muted); margin-top: 6px; margin-bottom: 24px; }
+    .pricing-features { list-style: none; margin-bottom: 28px; }
+    .pricing-features li {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem; color: rgba(240,238,255,0.8);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .pricing-features li::before { content: '✓'; color: var(--accent); font-weight: 700; }
+    .btn-full {
+      width: 100%; padding: 14px;
+      border-radius: 12px; border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600; font-size: 0.95rem;
+      cursor: none; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-full.primary { background: linear-gradient(135deg, var(--accent), #a07cff); color: white; }
+    .btn-full.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.35); }
+    .btn-full.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-full.ghost:hover { border-color: var(--accent); }
+
+    /* CTA */
+    .cta-section {
+      background: linear-gradient(135deg, #16122a 0%, #0a0a1a 50%, #1a1016 100%);
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+    .cta-section h2 { max-width: 700px; margin: 0 auto; font-size: clamp(2rem, 4vw, 3.2rem); }
+    .cta-section p { margin: 16px auto 40px; color: var(--muted); max-width: 460px; line-height: 1.7; }
+
+    /* CONTACT FORM */
+    .contact-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: start;
+    }
+    @media (max-width: 768px) {
+      .contact-grid { grid-template-columns: 1fr; }
+      nav ul { display: none; }
+      nav { padding: 16px 24px; }
+      section { padding: 70px 24px; }
+      .stats-bar { gap: 30px; padding: 32px 24px; }
+      .steps::before { display: none; }
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.83rem; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 12px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+      outline: none; transition: border-color 0.2s;
+      cursor: none;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+    .form-group select option { background: #1a1a26; }
+    .contact-info { }
+    .contact-item { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 28px; }
+    .contact-icon { font-size: 1.4rem; width: 44px; height: 44px; background: var(--card); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .contact-item h4 { font-family: 'Syne', sans-serif; font-size: 0.95rem; margin-bottom: 4px; }
+    .contact-item p { font-size: 0.88rem; color: var(--muted); }
+
+    /* FOOTER */
+    footer {
+      padding: 28px 48px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px;
+      background: var(--surface); position: relative; z-index: 1;
+    }
+    footer p { font-size: 0.83rem; color: var(--muted); }
+
+    /* SCROLL ANIMATION */
+    .reveal {
+      opacity: 0; transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+
+    /* MARQUEE */
+    .marquee-wrap {
+      overflow: hidden; white-space: nowrap;
+      background: rgba(124,92,252,0.08);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    .marquee-track {
+      display: inline-flex; gap: 0;
+      animation: marquee 20s linear infinite;
+    }
+    .marquee-track span { padding: 0 28px; font-size: 0.8rem; color: var(--muted); letter-spacing: 1px; }
+    .marquee-track span.dot { color: var(--accent); font-size: 1.2rem; padding: 0 4px; }
+    @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Task<span>Pro</span></div>
+  <ul>
+    <li><a href="#services">Layanan</a></li>
+    <li><a href="#proses">Proses</a></li>
+    <li><a href="#harga">Harga</a></li>
+    <li><a href="#testimoni">Testimoni</a></li>
+  </ul>
+  <button class="nav-cta" onclick="scrollToContact()">Pesan Sekarang →</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <div class="badge"><span class="dot"></span> Solusi Akademik Profesional</div>
+
+  <h1>
+    Tugas Numpuk?<br/>
+    <span class="highlight">Kami yang</span> <span class="strike">Pusing</span><br/>
+    <span class="highlight">Kerjain!</span>
+  </h1>
+
+  <p>Dari skripsi, tesis, hingga disertasi — tim expert kami siap bantu kamu tuntas dengan hasil berkualitas, tepat waktu, anti panik.</p>
+
+  <div class="hero-actions">
+    <button class="btn-primary" onclick="scrollToContact()">🚀 Konsultasi Gratis</button>
+    <button class="btn-secondary" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">Lihat Layanan ↓</button>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track" id="marquee">
+    <span>Skripsi & Tesis</span><span class="dot">✦</span>
+    <span>Makalah & Essai</span><span class="dot">✦</span>
+    <span>Coding & Pemrograman</span><span class="dot">✦</span>
+    <span>Laporan PKL</span><span class="dot">✦</span>
+    <span>Presentasi PowerPoint</span><span class="dot">✦</span>
+    <span>Analisis Data</span><span class="dot">✦</span>
+    <span>Tugas Online</span><span class="dot">✦</span>
+    <span>Artikel Ilmiah</span><span class="dot">✦</span>
+    <span>Review Jurnal</span><span class="dot">✦</span>
+    <span>Skripsi & Tesis</span><span class="dot">✦</span>
+    <span>Makalah & Essai</span><span class="dot">✦</span>
+    <span>Coding & Pemrograman</span><span class="dot">✦</span>
+    <span>Laporan PKL</span><span class="dot">✦</span>
+    <span>Presentasi PowerPoint</span><span class="dot">✦</span>
+    <span>Analisis Data</span><span class="dot">✦</span>
+    <span>Tugas Online</span><span class="dot">✦</span>
+    <span>Artikel Ilmiah</span><span class="dot">✦</span>
+    <span>Review Jurnal</span><span class="dot">✦</span>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat reveal"><div class="stat-num" data-count="2400">0</div><div class="stat-label">Tugas Selesai</div></div>
+  <div class="stat reveal reveal-delay-1"><div class="stat-num" data-count="98">0</div><div class="stat-label">% Kepuasan Klien</div></div>
+  <div class="stat reveal reveal-delay-2"><div class="stat-num" data-count="10">0</div><div class="stat-label">Expert Writer</div></div>
+  <div class="stat reveal reveal-delay-3"><div class="stat-num" data-count="4">0</div><div class="stat-label">Jam Respon Pertama</div></div>
+</div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="section-header reveal">
+    <div class="section-label">Layanan Kami</div>
+    <h2>Semua Jenis Tugas, Satu Solusi</h2>
+    <p>Tim kami terdiri dari lulusan S1, S2, dan S3 dari berbagai bidang. Apapun tugasmu, kami bisa.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <div class="service-icon" style="background:rgba(124,92,252,0.15)">📝</div>
+      <h3>Skripsi & Tesis</h3>
+      <p>Penulisan skripsi lengkap dari Bab 1–5, revisi unlimited, bebas plagiarisme, siap sidang.</p>
+      <div class="service-price">Mulai Rp 200.000 <span>/ bab</span></div>
+    </div>
+    
+    <div class="service-card reveal reveal-delay-2">
+      <div class="service-icon" style="background:rgba(252,92,125,0.15)">📊</div>
+      <h3>Analisis & Statistik</h3>
+      <p>SPSS, R, Python, olah data, interpretasi hasil, laporan lengkap beserta visualisasi data.</p>
+      <div class="service-price">Mulai Rp 30.000 <span>/ analisis</span></div>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-icon" style="background:rgba(245,197,24,0.15)">📋</div>
+      <h3>Makalah & Laporan</h3>
+      <p>Makalah akademik, laporan PKL/KKN, proposal, essay ilmiah sesuai format kampus.</p>
+      <div class="service-price">Mulai Rp 30.000 <span>/ halaman</span></div>
+    </div>
+    <div class="service-card reveal reveal-delay-1">
+      <div class="service-icon" style="background:rgba(124,92,252,0.15)">🎨</div>
+      <h3>Presentasi & Desain</h3>
+      <p>PowerPoint profesional, infografis, poster ilmiah, desain slide sidang yang memukau.</p>
+      <div class="service-price">Mulai Rp 10.000 <span>/ project</span></div>
+    </div>
+    <div class="service-card reveal reveal-delay-2">
+      <div class="service-icon" style="background:rgba(92,219,252,0.15)">🎓</div>
+      <h3>Tugas Online & Ujian</h3>
+      <p>Kerjakan tugas LMS, quiz online, ujian take-home, soal essay — cepat dan akurat.</p>
+      <div class="service-price">Mulai Rp 25.000 <span>/ tugas</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROSES -->
+<section class="process-section" id="proses">
+  <div class="section-header reveal" style="text-align:center;margin:0 auto 56px;max-width:500px">
+    <div class="section-label">Cara Kerja</div>
+    <h2 style="margin:0 auto">Selesai dalam 4 Langkah Mudah</h2>
+  </div>
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-num">01</div>
+      <h4>Hubungi Kami</h4>
+      <p>Chat via WhatsApp atau isi form order. Ceritakan detail tugasmu.</p>
+    </div>
+    <div class="step reveal reveal-delay-1">
+      <div class="step-num">02</div>
+      <h4>Negosiasi & Deal</h4>
+      <p>Diskusi harga, deadline, dan kebutuhan spesifik. Transparan tanpa biaya tersembunyi.</p>
+    </div>
+    <div class="step reveal reveal-delay-2">
+      <div class="step-num">03</div>
+      <h4>Pengerjaan Expert</h4>
+      <p>Tim ahli kami mulai mengerjakan. Update progress real-time setiap saat.</p>
+    </div>
+    <div class="step reveal reveal-delay-3">
+      <div class="step-num">04</div>
+      <h4>Terima & Revisi</h4>
+      <p>Hasil dikirim sesuai deadline. Revisi gratis hingga kamu puas 100%.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONI -->
+<section id="testimoni">
+  <div class="section-header reveal">
+    <div class="section-label">Testimoni</div>
+    <h2>Ribuan Klien Sudah Percaya</h2>
+    <p>Bukan sekedar kata-kata — ini pengalaman nyata dari mereka yang sudah memakai jasa kami.</p>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testi-card reveal">
+      <div class="stars">★★★★★</div>
+      <blockquote>"Skripsi gue selesai 2 minggu sebelum deadline! Pembimbing langsung acc tanpa banyak revisi. Puas banget!"</blockquote>
+      <div class="testi-author">
+        <div class="avatar" style="background:linear-gradient(135deg,#7c5cfc,#fc5c7d)">A**</div>
+        <div><strong>A**ni R.</strong><br/>Kampus Negeri di Jakarta — Manajemen</div>
+      </div>
+    </div>
+    <div class="testi-card reveal reveal-delay-1">
+      <div class="stars">★★★★★</div>
+      <blockquote>"我的硕士论文顺利通过答辩，导师对质量非常满意。专业的团队，强烈推荐！" <em style="color:var(--muted);font-size:0.85rem">(Tesis S2 gue lulus sidang, pembimbing sangat puas kualitasnya. Tim profesional banget, highly recommended!)</em></blockquote>
+      <div class="testi-author">
+        <div class="avatar" style="background:linear-gradient(135deg,#5cdbfc,#7c5cfc)">L**</div>
+        <div><strong>L**g M.</strong><br/>Universitas di Shanghai, China — Ekonomi</div>
+      </div>
+    </div>
+    <div class="testi-card reveal reveal-delay-2">
+      <div class="stars">★★★★★</div>
+      <blockquote>"Harga terjangkau, kualitas juara. Laporan PKL 60 halaman selesai dalam 4 hari. Formatnya sesuai semua!"</blockquote>
+      <div class="testi-author">
+        <div class="avatar" style="background:linear-gradient(135deg,#fc5c7d,#f5c518)">S**</div>
+        <div><strong>S**i F.</strong><br/>Kampus Swasta di Jakarta</div>
+      </div>
+    </div>
+    <div class="testi-card reveal">
+      <div class="stars">★★★★★</div>
+      <blockquote>"我的博士论文写作质量超出预期！沟通顺畅，按时完成，解释也非常清晰。强烈推荐！" <em style="color:var(--muted);font-size:0.85rem">(Disertasi S3 gue melebihi ekspektasi! Komunikasi lancar, tepat waktu, penjelasan sangat jelas.)</em></blockquote>
+      <div class="testi-author">
+        <div class="avatar" style="background:linear-gradient(135deg,#f5c518,#fc5c7d)">W**</div>
+        <div><strong>W**i L.</strong><br/>Universitas di Beijing, China — Manajemen Bisnis</div>
+      </div>
+    </div>
+    <div class="testi-card reveal reveal-delay-1">
+      <div class="stars">★★★★★</div>
+      <blockquote>"Disertasi S3 gue yang super kompleks dikerjakan sempurna. Penjelasan via Zoom detail banget, sidang doktoral lancar jaya!"</blockquote>
+      <div class="testi-author">
+        <div class="avatar" style="background:linear-gradient(135deg,#7c5cfc,#5cdbfc)">R**</div>
+        <div><strong>R**a P.</strong><br/>Kampus Negeri di Bandung — Program Doktoral</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="harga" style="background:var(--surface)">
+  <div class="section-header reveal" style="text-align:center;margin:0 auto 56px;max-width:500px">
+    <div class="section-label">Paket Harga</div>
+    <h2 style="margin:0 auto">Harga Transparan, Kualitas Premium</h2>
+  </div>
+  <div class="pricing-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))">
+    <div class="pricing-card reveal">
+      <div class="pricing-tier">📘 Bab 1</div>
+      <div class="pricing-price"><sup>Rp</sup>700<span style="font-size:1rem">rb</span></div>
+      <div class="pricing-note">Pendahuluan</div>
+      <ul class="pricing-features">
+        <li>Latar belakang lengkap</li>
+        <li>Rumusan masalah</li>
+        <li>Tujuan & manfaat</li>
+        <li>Sudah include Turnitin</li>
+        <li>Dijelaskan via Zoom/ketemu</li>
+      </ul>
+      <button class="btn-full ghost" onclick="scrollToContact()">Pesan</button>
+    </div>
+    <div class="pricing-card reveal reveal-delay-1">
+      <div class="pricing-tier">📗 Bab 2</div>
+      <div class="pricing-price"><sup>Rp</sup>800<span style="font-size:1rem">rb</span></div>
+      <div class="pricing-note">Tinjauan Pustaka</div>
+      <ul class="pricing-features">
+        <li>Kajian teori mendalam</li>
+        <li>Kerangka berpikir</li>
+        <li>Referensi lengkap</li>
+        <li>Sudah include Turnitin</li>
+        <li>Dijelaskan via Zoom/ketemu</li>
+      </ul>
+      <button class="btn-full ghost" onclick="scrollToContact()">Pesan</button>
+    </div>
+    <div class="pricing-card featured reveal reveal-delay-2">
+      <div class="featured-badge">🔥 Best Value</div>
+      <div class="pricing-tier" style="color:#b49fff">📦 Bundling Bab 1–3</div>
+      <div class="pricing-price"><sup>Rp</sup>2<span style="font-size:1rem">jt</span></div>
+      <div class="pricing-note">Hemat Rp 200rb!</div>
+      <ul class="pricing-features">
+        <li>Bab 1 + Bab 2 + Bab 3</li>
+        <li>Metodologi penelitian</li>
+        <li>Revisi unlimited</li>
+        <li>Sudah include Turnitin</li>
+        <li>Dijelaskan via Zoom/ketemu</li>
+      </ul>
+      <button class="btn-full primary" onclick="scrollToContact()">Pesan Bundling</button>
+    </div>
+    <div class="pricing-card reveal reveal-delay-1">
+      <div class="pricing-tier">📙 Bab 3</div>
+      <div class="pricing-price"><sup>Rp</sup>700<span style="font-size:1rem">rb</span></div>
+      <div class="pricing-note">Metodologi</div>
+      <ul class="pricing-features">
+        <li>Desain penelitian</li>
+        <li>Populasi & sampel</li>
+        <li>Instrumen penelitian</li>
+        <li>Sudah include Turnitin</li>
+        <li>Dijelaskan via Zoom/ketemu</li>
+      </ul>
+      <button class="btn-full ghost" onclick="scrollToContact()">Pesan</button>
+    </div>
+    <div class="pricing-card reveal reveal-delay-2">
+      <div class="pricing-tier">📕 Bab 4</div>
+      <div class="pricing-price"><sup>Rp</sup>1–2<span style="font-size:1rem">jt</span></div>
+      <div class="pricing-note">Tergantung judul + data</div>
+      <ul class="pricing-features">
+        <li>Hasil & pembahasan</li>
+        <li>Analisis data lengkap</li>
+        <li>Visualisasi & tabel</li>
+        <li>Sudah include Turnitin</li>
+        <li>Dijelaskan via Zoom/ketemu</li>
+      </ul>
+      <button class="btn-full ghost" onclick="scrollToContact()">Pesan</button>
+    </div>
+    <div class="pricing-card reveal reveal-delay-3">
+      <div class="pricing-tier">✅ Bab 5</div>
+      <div class="pricing-price"><sup>Rp</sup>200<span style="font-size:1rem">rb</span></div>
+      <div class="pricing-note">Penutup</div>
+      <ul class="pricing-features">
+        <li>Kesimpulan & saran</li>
+        <li>Ringkas & padat</li>
+        <li>Sesuai hasil penelitian</li>
+        <li>Sudah include Turnitin</li>
+        <li>Dijelaskan via Zoom/ketemu</li>
+      </ul>
+      <button class="btn-full ghost" onclick="scrollToContact()">Pesan</button>
+    </div>
+  </div>
+  <div style="margin-top:28px;text-align:center;background:rgba(124,92,252,0.08);border:1px solid rgba(124,92,252,0.2);border-radius:16px;padding:20px 28px" class="reveal">
+    <p style="color:#b49fff;font-size:0.9rem">🔍 <strong style="color:var(--text)">Semua harga sudah termasuk Turnitin</strong> + penjelasan langsung via Zoom atau ketemu. Ada juga <strong style="color:var(--accent)">jasa Turnitin terpisah</strong> — tanya via WA!</p>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-grid">
+    <div class="reveal">
+      <div class="section-label">Hubungi Kami</div>
+      <h2>Yuk, Konsultasi Sekarang!</h2>
+      <p style="color:var(--muted);margin-top:14px;margin-bottom:40px;line-height:1.7">Ceritakan tugasmu dan kami akan kirim estimasi harga & waktu dalam &lt;30 menit.</p>
+      <div class="contact-item">
+        <div class="contact-icon">💬</div>
+        <div><h4>WhatsApp</h4><p>+62 895-3080-5009 (fast response)</p></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon">📧</div>
+        <div><h4>Email</h4><p>youredumate2025@gmail.com</p></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon">⏰</div>
+        <div><h4>Jam Operasional</h4><p>24 jam / 7 hari seminggu</p></div>
+      </div>
+    </div>
+
+    <div class="reveal reveal-delay-1">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:36px">
+        <h3 style="font-family:'Syne',sans-serif;margin-bottom:24px">Form Order Cepat</h3>
+        <div class="form-group">
+          <label>Nama Lengkap</label>
+          <input type="text" placeholder="Nama kamu..."/>
+        </div>
+        <div class="form-group">
+          <label>WhatsApp</label>
+          <input type="text" placeholder="+62 8xx-xxxx-xxxx"/>
+        </div>
+        <div class="form-group">
+          <label>Jenis Tugas</label>
+          <select>
+            <option>Pilih jenis tugas...</option>
+            <option>Skripsi / Tesis / Disertasi</option>
+            <option>Makalah / Laporan</option>
+                        <option>Analisis Data</option>
+            <option>Presentasi</option>
+            <option>Tugas Online</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Deadline</label>
+          <input type="date"/>
+        </div>
+        <div class="form-group">
+          <label>Deskripsi Tugas</label>
+          <textarea placeholder="Ceritakan detail tugas kamu, jumlah halaman, format, dll..."></textarea>
+        </div>
+        <button class="btn-full primary" onclick="handleOrder()" style="margin-top:4px">🚀 Kirim & Dapatkan Estimasi</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="reveal">
+    <div class="section-label" style="display:block;text-align:center">Tunggu apa lagi?</div>
+    <h2>Deadline Tinggal Besok?<br/><span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Kami Siap Bantu!</span></h2>
+    <p>Jangan biarkan tugas merusak hidupmu. Percayakan ke ahlinya dan nikmati waktu luangmu.</p>
+    <button class="btn-primary" onclick="scrollToContact()" style="font-size:1.05rem;padding:16px 40px">💬 Chat WhatsApp Sekarang</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo">Task<span>Pro</span></div>
+  <p>© 2025 TaskPro. Solusi Tugas #1 Indonesia.</p>
+  <p style="font-size:0.78rem">Privasi terjaga 🔒 | Garansi Kepuasan ✓</p>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0;
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx - 6 + 'px';
+    cursor.style.top = my - 6 + 'px';
+    ring.style.left = mx - 18 + 'px';
+    ring.style.top = my - 18 + 'px';
+  });
+  document.querySelectorAll('button, a, input, select, textarea').forEach(el => {
+    el.addEventListener('mouseenter', () => { cursor.style.transform = 'scale(2)'; ring.style.transform = 'scale(1.4)'; ring.style.borderColor = 'var(--accent2)'; });
+    el.addEventListener('mouseleave', () => { cursor.style.transform = 'scale(1)'; ring.style.transform = 'scale(1)'; ring.style.borderColor = 'var(--accent)'; });
+  });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Count up animation
+  function countUp(el, target) {
+    let count = 0;
+    const step = target / 60;
+    const interval = setInterval(() => {
+      count += step;
+      if(count >= target) { count = target; clearInterval(interval); }
+      el.textContent = Math.floor(count).toLocaleString('id');
+    }, 25);
+  }
+  const statsObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting) {
+        const el = e.target.querySelector('[data-count]');
+        if(el && !el.dataset.animated) {
+          el.dataset.animated = 'true';
+          countUp(el, parseInt(el.dataset.count));
+        }
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.stat').forEach(el => statsObserver.observe(el));
+
+  function scrollToContact() {
+    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function handleOrder() {
+    const btn = event.target;
+    btn.textContent = '✅ Terkirim! Kami akan segera menghubungi kamu.';
+        btn.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+    setTimeout(() => {
+      btn.textContent = '🚀 Kirim & Dapatkan Estimasi';
+      btn.style.background = '';
+    }, 4000);
+  }
+</script>
+
+</body>
+</html>
