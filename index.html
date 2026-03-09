@@ -478,7 +478,7 @@
     <li><a href="#harga">Harga</a></li>
     <li><a href="#testimoni">Testimoni</a></li>
   </ul>
-  <button class="nav-cta" onclick="scrollToContact()">Pesan Sekarang →</button>
+  <button class="nav-cta" onclick="bukaWA()">Pesan Sekarang →</button>
 </nav>
 
 <!-- HERO -->
@@ -814,7 +814,7 @@
     <div class="section-label" style="display:block;text-align:center">Tunggu apa lagi?</div>
     <h2>Deadline Tinggal Besok?<br/><span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Kami Siap Bantu!</span></h2>
     <p>Jangan biarkan tugas merusak hidupmu. Percayakan ke ahlinya dan nikmati waktu luangmu.</p>
-    <button class="btn-primary" onclick="scrollToContact()" style="font-size:1.05rem;padding:16px 40px">💬 Chat WhatsApp Sekarang</button>
+    <button class="btn-primary" onclick="bukaWA()" style="font-size:1.05rem;padding:16px 40px">💬 Chat WhatsApp Sekarang</button>
   </div>
 </section>
 
@@ -876,13 +876,26 @@
   }
 
   function handleOrder() {
-    const btn = event.target;
-    btn.textContent = '✅ Terkirim! Kami akan segera menghubungi kamu.';
-        btn.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
-    setTimeout(() => {
-      btn.textContent = '🚀 Kirim & Dapatkan Estimasi';
-      btn.style.background = '';
-    }, 4000);
+    const nama = document.querySelector('input[placeholder="Nama kamu..."]').value || '-';
+    const wa = document.querySelector('input[placeholder="+62 8xx-xxxx-xxxx"]').value || '-';
+    const jenis = document.querySelector('select').value || '-';
+    const deadline = document.querySelector('input[type="date"]').value || '-';
+    const deskripsi = document.querySelector('textarea').value || '-';
+
+    const pesan = 'Halo TaskPro! Saya ingin order:\n\n' +
+      '👤 Nama: ' + nama + '\n' +
+      '📱 WhatsApp: ' + wa + '\n' +
+      '📚 Jenis Tugas: ' + jenis + '\n' +
+      '⏰ Deadline: ' + deadline + '\n' +
+      '📝 Deskripsi: ' + deskripsi;
+
+    const url = 'https://wa.me/6289530805009?text=' + encodeURIComponent(pesan);
+    window.open(url, '_blank');
+  }
+
+  function bukaWA() {
+    const url = 'https://wa.me/6289530805009?text=' + encodeURIComponent('Halo TaskPro! Saya ingin konsultasi tugas 😊');
+    window.open(url, '_blank');
   }
 </script>
 
